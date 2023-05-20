@@ -1,0 +1,39 @@
+
+{% block content %}
+  <h2>Pending Deposit Validation Requests</h2>
+  {% if validation_requests %}
+    <form method="POST">
+      {% csrf_token %}
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Amount</th>
+            <th>Validate</th>
+            <th>Reject</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for request in validation_requests %}
+            <tr>
+              <td>{{ request.user }}</td>
+              <td>{{ request.amount }}</td>
+              <td>
+                <input type="radio" name="is_valid" value="True" id="valid_{{ request.id }}" required>
+                <label for="valid_{{ request.id }}">Validate</label>
+              </td>
+              <td>
+                <input type="radio" name="is_valid" value="False" id="reject_{{ request.id }}">
+                <label for="reject_{{ request.id }}">Reject</label>
+              </td>
+            </tr>
+            <input type="hidden" name="request_id" value="{{ request.id }}">
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="submit">Submit</button>
+    </form>
+  {% else %}
+    <p>No pending deposit validation requests.</p>
+  {% endif %}
+{% endblock %}

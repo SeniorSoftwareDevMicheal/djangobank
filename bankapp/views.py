@@ -6,9 +6,6 @@ from .models import MyUser
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import authenticate, login as auth_login
 from django.urls import reverse
-from decimal import Decimal
-from bankapp.models import Transaction
-from django.contrib.auth.decorators import login_required
 # from .models import AccountBalance
 # Create your views here.
 
@@ -20,8 +17,12 @@ def home(request):
     return render(request, 'index.html')
 
 #SIGN IN FUNCTION
+
+
 def signin(request):
     return render(request, 'signin.html')
+
+
 
 def user_login(request):
     if request.method == 'POST':
@@ -66,44 +67,47 @@ def signup(request):
     else:
         return render(request, 'signup.html')
 
+from django.http import HttpResponseForbidden
+
 def dashboard(request):
-    # your code to authenticate the user goes here
     user = request.user
-    # account_balance = AccountBalance.objects.get(user=user)
-    context = {'user': request.user, 'account_number': request.user.account_number, 'balance': request.user.balance,}
-    return render(request, 'dashboard.html', context)
+
+    if user.is_suspended:
+        return render(request, 'suspended_dashboard.html', {'balance': user.balance})
+    else:
+        context = {'user': user, 'account_number': user.account_number, 'balance': user.balance}
+        return render(request, 'dashboard.html', context)
+
 
 #deposit function
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from decimal import Decimal
 
-@login_required
+from bankapp.models import Transaction
+
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
 def deposit(request):
     if request.method == 'POST':
-        amount = Decimal(request.POST.get('amount', 0))
-        user = request.user
-
-        try:
-            transaction = user.deposit(amount)
-
-            # If user is a superuser, mark transaction as validated and update user balance
-            if user.is_superuser:
-                transaction.validation_status = 'Validated'
-                transaction.save()
-
-                user.balance += amount
-                user.save()
-
-            messages.success(request, f'Your deposit of {amount} was successful.')
+        amount = float(request.POST.get('amount'))
+        recipient_account_number = request.POST.get('accountnumber')
+        if amount <= 0:
+            messages.error(request, 'Amount must be greater than zero')
+        else:
+            user = request.user
+            recipient = MyUser.objects.get(account_number=recipient_account_number)
+            recipient.balance = F('balance') + amount
+            recipient.save()
+            # Create a new Transaction object to record the deposit
+            transaction = Transaction.objects.create(user=user, transaction_type='Deposit', amount=amount)
+            transaction.save()
+            messages.success(request, f'Successfully added {amount:.2f} to your account balance. deposit authorized by {user}')
             return redirect('dashboard')
-
-        except ValueError as e:
-            messages.error(request, str(e))
-
     return render(request, 'deposit.html')
 
-
+@staff_member_required
 def withdraw(request):
     if request.method == 'POST':
         amount = float(request.POST.get('amount'))
@@ -118,7 +122,11 @@ def withdraw(request):
             return redirect('withdraw')
     return render(request, 'withdraw.html')
 
+
 #trasfer function
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import F
 #The F() function is a very useful tool in Django for working with model fields.
 #---It allows you to reference the value of a database column or field and use it in a query or a filter expression.
@@ -171,6 +179,7 @@ def transfer(request):
 
     return render(request, 'transfer.html')
 
+
 def airtime(request):
     if request.method == 'POST':
         amount = float(request.POST.get('amount'))
@@ -214,30 +223,37 @@ def history(request):
 
     return render(request, 'history.html', {'transactions': transactions})
 
-# views.py
+from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
+from .models import MyUser
+
+@staff_member_required(login_url='signin')
+def admin_dashboard(request):
+    users = MyUser.objects.all()
+    return render(request, 'admin_dashboard.html', {'users': users})
 
 @staff_member_required
-def pending_transactions(request):
-    # retrieve all pending transactions
-    transactions = Transaction.objects.filter(validation_status='Pending')
+def admindash(request):
+    # your code to authenticate the user goes here
+    user = request.user 
+    # account_balance = AccountBalance.objects.get(user=user)
+    context = {'user': request.user, 'account_number': request.user.account_number, 'balance': request.user.balance,}
+    return render(request, 'admin_dash.html', context,)
 
-    if request.method == 'POST':
-        # process the form submission
-        transaction_ids = request.POST.getlist('transaction_ids')
-        for transaction_id in transaction_ids:
-            transaction = get_object_or_404(Transaction, id=transaction_id)
-            if transaction.validation_status == 'Pending':
-                # update the account balance and change the status of the transaction
-                user = transaction.user
-                user.balance += transaction.amount
-                user.save()
-                transaction.validation_status = 'Validated'
-                transaction.save()
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import MyUser
 
-        messages.success(request, "Pending transactions have been validated successfully.")
-        return redirect('pending_transactions')
+def suspend_user(request, user_id):
+    user = get_object_or_404(MyUser, id=user_id)
+    user.is_suspended = True
+    user.save()
+    messages.success(request, 'User account suspended successfully.')
+    return redirect('admin_dashboard')
 
-    return render(request, 'pending_transactions.html', {'transactions': transactions})
+def unsuspend_user(request, user_id):
+    user = get_object_or_404(MyUser, id=user_id)
+    user.is_suspended = False
+    user.save()
+    messages.success(request, 'User account unsuspended successfully.')
+    return redirect('admin_dashboard')

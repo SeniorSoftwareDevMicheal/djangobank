@@ -44,14 +44,18 @@
 				</span>
 			</button>
 			<div class="app-header-actions-buttons">
-				<button class="icon-button large">
-					<a href="{% url 'home' %}">
-					<i class='fa fa-sign-out' style='color: white'></i>
-					</a>
-				</button>
-				{% comment %} <button class="icon-button large">
-					<i class="ph-bell"></i>
-				</button> {% endcomment %}
+				<form action="home">
+					<button class="icon-button large">
+						<i class='fa fa-sign-out' style='color: white'></i>
+					</button>
+				</form>
+				{% if user.is_superuser %}
+				<form action="admindash">
+					<button class="icon-button large" >
+						<i class="fa fa-briefcase" aria-hidden="true"></i>
+					</button>
+				</form>
+				{% endif %}
 			</div>
 		</div>
 		<div class="app-header-mobile">
@@ -67,14 +71,6 @@
 				<a href="{% url 'dashboard' %}">
 					<i class="ph-browsers"></i>
 					<span>Dashboard</span>
-				</a>
-				<a href="{% url 'deposit' %}">
-					<i class="ph-file-text"></i>
-					<span>Deposit</span>
-				</a>
-				<a href="{% url 'withdraw' %}">
-					<i class="ph-check-square"></i>
-					<span>Withdraw</span>
 				</a>
 				<a href="{% url 'transfer' %}">
 					<i class="ph-swap"></i>

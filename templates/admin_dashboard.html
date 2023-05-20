@@ -1,0 +1,42 @@
+<!-- admin_dashboard.html -->
+{% block content %}
+    <h2>Admin Dashboard</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date of Birth</th>
+                <th>Gender</th>
+                <th>Account number</th>
+                <th>Balance</th>
+                <th>Actions</th> <!-- Add a new column for actions -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.date_of_birth }}</td>
+                    <td>{{ user.gender }}</td>
+                    <td>{{ user.account_number }}</td>
+                    <td>{{ user.balance }}</td>
+                    <td>
+                        {% if user.is_suspended %}
+                        <form action="{% url 'unsuspend_user' user.id %}" method="POST">
+                            {% csrf_token %}
+                            <button type="submit">Unsuspend</button>
+                        </form>
+                        {% else %}
+                            <form action="{% url 'suspend_user' user.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit">Suspend</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

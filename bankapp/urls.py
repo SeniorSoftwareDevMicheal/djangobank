@@ -14,4 +14,9 @@ urlpatterns = [
     path('airtime',views.airtime, name='airtime' ),
     path('history',views.history, name='history' ),
     path('electricity',views.electricity, name='electricity' ),
+    path('admindashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admindash',views.admindash, name='admindash' ),
+    path('suspend_user/<int:user_id>/', views.suspend_user, name='suspend_user'),
+    path('unsuspend_user/<int:user_id>/', views.unsuspend_user, name='unsuspend_user'),
+    # path('validate_deposit',views.validate_deposit, name='validate_deposit')
 ]

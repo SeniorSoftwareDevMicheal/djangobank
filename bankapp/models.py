@@ -11,7 +11,7 @@ class MyUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user.balance = 1000
+        user.balance = 0
         user.save()
         return user
 
@@ -20,6 +20,7 @@ class MyUserManager(BaseUserManager):
         extra_fields.setdefault('is_superuser', True)
         return self.create_user(email, password, **extra_fields)
 
+    
 class MyUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     name = models.CharField(max_length=255)
@@ -51,19 +52,11 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
             if not MyUser.objects.filter(account_number=account_number).exists():
                 return account_number
 
-    def deposit(self, amount):
-        if amount <= 0:
-            raise ValueError("Amount must be greater than zero")
-        
-        transaction = Transaction.objects.create(
-            user=self,
-            transaction_type='Deposit',
-            amount=amount,
-            validation_status='Pending'
-        )
-        
-        return transaction       
-
+    # def deposit(self, amount):
+    #     if amount <= 0:
+    #         raise ValueError("Amount must be greater than zero")
+    #     self.balance += Decimal(str(amount))
+    #     self.save()
 
     def withdraw(self, amount):
         if amount <= 0:
@@ -82,6 +75,17 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
             raise ValueError("Amount must be greater than zero")
         self.balance -= Decimal(str(amount))
         self.save()
+    
+    is_suspended = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.id_number:
+            self.id_number = self.generate_account_number()
+        if not self.account_number:
+            self.account_number = self.generate_account_number()
+        if self.is_suspended:
+            self.balance = self.balance
+        super().save(*args, **kwargs)
 
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -103,17 +107,11 @@ class Transaction(models.Model):
         ('Utility', 'Utility')
     ]
 
-    VALIDATION_STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Validated', 'Validated'),
-        ('Rejected', 'Rejected')
-    ]
-
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
-    validation_status = models.CharField(max_length=10, choices=VALIDATION_STATUS_CHOICES, default='Pending')
 
     def __str__(self):
         return f"{str(self.user)}: {self.transaction_type} of {self.amount} on {self.date}"
+

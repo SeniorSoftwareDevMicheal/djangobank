@@ -4,3 +4,4 @@ from .models import MyUser, MyUserManager, AccountBalance, Transaction
 admin.site.register(MyUser)
 admin.site.register(AccountBalance)
 admin.site.register(Transaction)
+# admin.site.register(DepositValidationRequest)
