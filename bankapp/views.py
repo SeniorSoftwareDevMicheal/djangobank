@@ -6,6 +6,9 @@ from .models import MyUser
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import authenticate, login as auth_login
 from django.urls import reverse
+from decimal import Decimal
+from bankapp.models import Transaction
+from django.contrib.auth.decorators import login_required
 # from .models import AccountBalance
 # Create your views here.
 
@@ -17,12 +20,8 @@ def home(request):
     return render(request, 'index.html')
 
 #SIGN IN FUNCTION
-
-
 def signin(request):
     return render(request, 'signin.html')
-
-
 
 def user_login(request):
     if request.method == 'POST':
@@ -37,8 +36,6 @@ def user_login(request):
             return redirect(reverse('signin'))
     else:
         return render(request, 'signin.html')
-
-from django.shortcuts import render
 
 def home(request):
     return redirect('/')
@@ -78,27 +75,33 @@ def dashboard(request):
 
 #deposit function
 from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from decimal import Decimal
 
-from bankapp.models import Transaction
-
+@login_required
 def deposit(request):
     if request.method == 'POST':
-        amount = float(request.POST.get('amount'))
-        if amount <= 0:
-            messages.error(request, 'Amount must be greater than zero')
-        else:
-            user = request.user
-            user.deposit(amount)
-            # Create a new Transaction object to record the deposit
-            transaction = Transaction.objects.create(user=user, transaction_type='Deposit', amount=amount)
-            transaction.save()
-            messages.success(request, f'Successfully added {amount:.2f} to your account balance.')
+        amount = Decimal(request.POST.get('amount', 0))
+        user = request.user
+
+        try:
+            transaction = user.deposit(amount)
+
+            # If user is a superuser, mark transaction as validated and update user balance
+            if user.is_superuser:
+                transaction.validation_status = 'Validated'
+                transaction.save()
+
+                user.balance += amount
+                user.save()
+
+            messages.success(request, f'Your deposit of {amount} was successful.')
             return redirect('dashboard')
+
+        except ValueError as e:
+            messages.error(request, str(e))
+
     return render(request, 'deposit.html')
-
-
 
 
 def withdraw(request):
@@ -115,11 +118,7 @@ def withdraw(request):
             return redirect('withdraw')
     return render(request, 'withdraw.html')
 
-
 #trasfer function
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.db.models import F
 #The F() function is a very useful tool in Django for working with model fields.
 #---It allows you to reference the value of a database column or field and use it in a query or a filter expression.
@@ -172,7 +171,6 @@ def transfer(request):
 
     return render(request, 'transfer.html')
 
-
 def airtime(request):
     if request.method == 'POST':
         amount = float(request.POST.get('amount'))
@@ -215,3 +213,31 @@ def history(request):
     transactions = Transaction.objects.filter(user=user)
 
     return render(request, 'history.html', {'transactions': transactions})
+
+# views.py
+from django.contrib.admin.views.decorators import staff_member_required
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+
+@staff_member_required
+def pending_transactions(request):
+    # retrieve all pending transactions
+    transactions = Transaction.objects.filter(validation_status='Pending')
+
+    if request.method == 'POST':
+        # process the form submission
+        transaction_ids = request.POST.getlist('transaction_ids')
+        for transaction_id in transaction_ids:
+            transaction = get_object_or_404(Transaction, id=transaction_id)
+            if transaction.validation_status == 'Pending':
+                # update the account balance and change the status of the transaction
+                user = transaction.user
+                user.balance += transaction.amount
+                user.save()
+                transaction.validation_status = 'Validated'
+                transaction.save()
+
+        messages.success(request, "Pending transactions have been validated successfully.")
+        return redirect('pending_transactions')
+
+    return render(request, 'pending_transactions.html', {'transactions': transactions})

@@ -54,8 +54,16 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     def deposit(self, amount):
         if amount <= 0:
             raise ValueError("Amount must be greater than zero")
-        self.balance += Decimal(str(amount))
-        self.save()
+        
+        transaction = Transaction.objects.create(
+            user=self,
+            transaction_type='Deposit',
+            amount=amount,
+            validation_status='Pending'
+        )
+        
+        return transaction       
+
 
     def withdraw(self, amount):
         if amount <= 0:
@@ -95,10 +103,17 @@ class Transaction(models.Model):
         ('Utility', 'Utility')
     ]
 
+    VALIDATION_STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Validated', 'Validated'),
+        ('Rejected', 'Rejected')
+    ]
+
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
+    validation_status = models.CharField(max_length=10, choices=VALIDATION_STATUS_CHOICES, default='Pending')
 
     def __str__(self):
         return f"{str(self.user)}: {self.transaction_type} of {self.amount} on {self.date}"
