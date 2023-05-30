@@ -1,0 +1,12 @@
+{% for loan in pending_loans %}
+    <p>Loan ID: {{ loan.id }}</p>
+    <p>Loan Amount: {{ loan.amount }}</p>
+    <!-- Display other loan details as needed -->
+    <form method="POST" action="{% url 'repay_loan' loan.id %}">
+        {% csrf_token %}
+        <button type="submit">Repay</button>
+    </form>
+{% empty %}
+    <p>No pending loans for repayment.</p>
+{% endfor %}
+

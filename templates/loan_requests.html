@@ -1,0 +1,32 @@
+<!-- loan_requests.html -->
+<h2>Loan Requests</h2>
+<table>
+  <thead>
+    <tr>
+      <th>User</th>
+      <th>Amount</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for loan in loan_requests %}
+    <tr>
+      <td>{{ loan.user }}</td>
+      <td>{{ loan.amount }}</td>
+      <td>{{ loan.status }}</td>
+      <td>
+        <form method="POST" action="{% url 'approve_loan' loan.id %}">
+          {% csrf_token %}
+          <button type="submit">Approve</button>
+        </form>
+        <form method="POST" action="{% url 'reject_loan' loan.id %}">
+          {% csrf_token %}
+          <button type="submit">Reject</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+

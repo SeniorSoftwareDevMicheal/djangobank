@@ -2,11 +2,12 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
-from .models import MyUser
+from .models import MyUser , Loan
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import authenticate, login as auth_login
 from django.urls import reverse
-# from .models import AccountBalance
+from django.utils import timezone
+
 # Create your views here.
 
 #HOME PAGE FUNCTION
@@ -17,12 +18,8 @@ def home(request):
     return render(request, 'index.html')
 
 #SIGN IN FUNCTION
-
-
 def signin(request):
     return render(request, 'signin.html')
-
-
 
 def user_login(request):
     if request.method == 'POST':
@@ -80,12 +77,8 @@ def dashboard(request):
 
 
 #deposit function
-from django.shortcuts import render, redirect
-from django.contrib import messages
 from decimal import Decimal
-
 from bankapp.models import Transaction
-
 from django.contrib.admin.views.decorators import staff_member_required
 
 @staff_member_required
@@ -111,8 +104,9 @@ def deposit(request):
 def withdraw(request):
     if request.method == 'POST':
         amount = float(request.POST.get('amount'))
-        if amount <= 0:
-            messages.error(request, 'Amount must be greater than zero')
+        customer = request.user
+        if amount > customer.balance :
+            messages.error(request, 'Insuficient funds')
         else:
             user = request.user
             user.withdraw(amount)
@@ -122,15 +116,11 @@ def withdraw(request):
             return redirect('withdraw')
     return render(request, 'withdraw.html')
 
-
 #trasfer function
-from django.shortcuts import render, redirect
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import F
 #The F() function is a very useful tool in Django for working with model fields.
 #---It allows you to reference the value of a database column or field and use it in a query or a filter expression.
-from .models import MyUser
 
 @login_required
 def transfer(request):
@@ -179,14 +169,14 @@ def transfer(request):
 
     return render(request, 'transfer.html')
 
-
 def airtime(request):
     if request.method == 'POST':
+        customer = request.user
         amount = float(request.POST.get('amount'))
         network = request.POST.get('network')
         phonenumber = request.POST.get('phonenumber')
-        if amount <= 0:
-            messages.error(request, 'Amount must be greater than zero')
+        if amount > customer.balance :
+            messages.error(request, 'Insuficient funds')
         else:
             user = request.user
             user.airtime(amount)
@@ -202,8 +192,9 @@ def electricity(request):
         biller = request.POST.get('biller')
         meternumber = request.POST.get('meternumber')
         category = request.POST.get('category')
-        if amount <= 0:
-            messages.error(request, 'Amount must be greater than zero')
+        customer = request.user
+        if amount > customer.balance :
+            messages.error(request, 'Insuficient funds')
         else:
             user = request.user
             user.electricity(amount)
@@ -223,10 +214,6 @@ def history(request):
 
     return render(request, 'history.html', {'transactions': transactions})
 
-from django.contrib.auth.decorators import login_required
-from django.contrib.admin.views.decorators import staff_member_required
-from .models import MyUser
-
 @staff_member_required(login_url='signin')
 def admin_dashboard(request):
     users = MyUser.objects.all()
@@ -241,8 +228,6 @@ def admindash(request):
     return render(request, 'admin_dash.html', context,)
 
 from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from .models import MyUser
 
 def suspend_user(request, user_id):
     user = get_object_or_404(MyUser, id=user_id)
@@ -257,3 +242,88 @@ def unsuspend_user(request, user_id):
     user.save()
     messages.success(request, 'User account unsuspended successfully.')
     return redirect('admin_dashboard')
+
+from .models import Loan
+
+@login_required
+def apply_loan(request):
+    if request.method == 'POST':
+        amount = request.POST.get('amount')
+        # Additional fields from the loan application form
+        # ...
+        loan = Loan.objects.create(user=request.user, amount=amount)
+        # Set any other fields on the loan object as needed
+        loan.calculate_due_date()  # Calculate the due date for the loan
+        loan.save()
+        messages.success(request, 'Loan application submitted successfully.')
+        return redirect('dashboard')
+    return render(request, 'apply_loan.html')
+
+@staff_member_required
+def loan_requests(request):
+    loan_requests = Loan.objects.filter(status='pending')
+    return render(request, 'loan_requests.html', {'loan_requests': loan_requests})
+
+from datetime import datetime, timedelta
+
+@login_required
+def approve_loan(request, loan_id):
+    loan = get_object_or_404(Loan, id=loan_id)
+    
+    # Check if the loan is already approved or has been paid
+    if loan.status != 'pending':
+        messages.error(request, 'Loan has already been approved or paid.')
+        return redirect('dashboard')
+
+    borrower = loan.user
+    borrower.balance += loan.amount
+    borrower.save()
+
+    # Set the loan status to "approved awaiting repayment"
+    loan.status = 'approved awaiting repayment'
+    loan.approved_by = request.user
+    loan.date_approved = datetime.now()
+    loan.calculate_due_date()
+    loan.save()
+
+    messages.success(request, 'Loan approved successfully.')
+    return redirect('dashboard')
+
+@staff_member_required
+def reject_loan(request, loan_id):
+    loan = get_object_or_404(Loan, id=loan_id)
+    loan.status = 'rejected'
+    loan.save()
+    messages.success(request, 'Loan rejected successfully.')
+    return redirect('loan_requests')
+
+from django.shortcuts import render ,redirect
+
+def pending_repayment(request):
+    user = request.user
+    pending_loans = Loan.objects.filter(user=user, status='approved awaiting repayment')
+    return render(request, 'pending_repayment.html', {'pending_loans': pending_loans})
+
+def repay_loan(request, loan_id):
+    loan = Loan.objects.get(id=loan_id)
+
+    # Check if the loan is in the pending repayment status
+    if loan.status == 'approved awaiting repayment':
+        user = loan.user
+        amount = loan.amount
+
+        # Deduct the loan amount from the user's balance
+        user.balance -= amount
+        user.save()
+
+        # Update the loan status to indicate repayment
+        loan.status = 'repaid'
+        loan.save()
+
+        # Redirect the user to a success page or perform any other necessary actions
+        messages.success(request, 'repayment success')
+        return redirect('dashboard')
+
+    # If the loan is not in the correct status, handle the error or redirect to an appropriate page
+    messages.success(request, 'repayment failure')
+    return redirect('dashboard')

@@ -1,5 +1,5 @@
 from django.urls import path
-from .import views
+from . import views
 
 urlpatterns = [
     path('',views.index, name='index' ),
@@ -18,5 +18,11 @@ urlpatterns = [
     path('admindash',views.admindash, name='admindash' ),
     path('suspend_user/<int:user_id>/', views.suspend_user, name='suspend_user'),
     path('unsuspend_user/<int:user_id>/', views.unsuspend_user, name='unsuspend_user'),
-    # path('validate_deposit',views.validate_deposit, name='validate_deposit')
+    path('loan/', views.apply_loan, name='loan'),
+    path('loan-requests/', views.loan_requests, name='loan_requests'),
+    path('approve-loan/<int:loan_id>/', views.approve_loan, name='approve_loan'),
+    path('reject-loan/<int:loan_id>/', views.reject_loan, name='reject_loan'),
+    path('loans/pending-repayment/', views.pending_repayment, name='pending_repayment'),
+     path('repay-loan/<int:loan_id>/', views.repay_loan, name='repay_loan'),
 ]
+
