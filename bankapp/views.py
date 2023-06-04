@@ -103,18 +103,22 @@ def deposit(request):
 @staff_member_required
 def withdraw(request):
     if request.method == 'POST':
-        amount = float(request.POST.get('amount'))
-        customer = request.user
-        if amount > customer.balance :
-            messages.error(request, 'Insuficient funds')
-        else:
-            user = request.user
-            user.withdraw(amount)
-            transaction = Transaction.objects.create(user=user, transaction_type='Withdrawal', amount=amount)
-            transaction.save() # add this line to save the transaction to the database
-            messages.success(request, f'Successfully withdrew {amount:.2f} from your account balance.')
-            return redirect('withdraw')
+        amount = request.POST.get('amount')
+        return render (request, 'tramsaction_pin')
+        transaction_pin = request.POST.get('transaction_pin')
+        user = request.user
+
+        
+
+        try:
+            user.withdraw(amount, transaction_pin)
+            messages.success(request, 'Withdrawal successful.')
+            return redirect('dashboard')
+        except ValueError as e:
+            messages.error(request, str(e))
+
     return render(request, 'withdraw.html')
+
 
 #trasfer function
 from django.contrib.auth.decorators import login_required
@@ -198,7 +202,7 @@ def electricity(request):
         else:
             user = request.user
             user.electricity(amount)
-            transaction = Transaction.objects.create(user=user, transaction_type='Utility', amount=amount)
+            transaction = Transaction.objects.create(user=user, transaction_type='Electricity', amount=amount)
             transaction.save()
             messages.success(request, f'sucsessfully recharged your {category} meter, Biller:{biller} amount:{amount:.2f}.')
             return redirect('dashboard')    
@@ -220,12 +224,12 @@ def admin_dashboard(request):
     return render(request, 'admin_dashboard.html', {'users': users})
 
 @staff_member_required
-def admindash(request):
+def adminpanel(request):
     # your code to authenticate the user goes here
     user = request.user 
     # account_balance = AccountBalance.objects.get(user=user)
     context = {'user': request.user, 'account_number': request.user.account_number, 'balance': request.user.balance,}
-    return render(request, 'admin_dash.html', context,)
+    return render(request, 'admin_panel.html', context,)
 
 from django.shortcuts import get_object_or_404, redirect
 
@@ -279,6 +283,9 @@ def approve_loan(request, loan_id):
     borrower.balance += loan.amount
     borrower.save()
 
+    borrower_transaction = Transaction.objects.create(user=borrower, transaction_type='Bank-Loan', amount=loan.amount)
+    borrower_transaction.save()
+
     # Set the loan status to "approved awaiting repayment"
     loan.status = 'approved awaiting repayment'
     loan.approved_by = request.user
@@ -319,7 +326,9 @@ def repay_loan(request, loan_id):
         # Update the loan status to indicate repayment
         loan.status = 'repaid'
         loan.save()
-
+        
+        borrower_transaction = Transaction.objects.create(user=user, transaction_type='Repayment-Loan', amount=loan.amount)
+        borrower_transaction.save()
         # Redirect the user to a success page or perform any other necessary actions
         messages.success(request, 'repayment success')
         return redirect('dashboard')

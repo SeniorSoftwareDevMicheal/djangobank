@@ -4,8 +4,8 @@
     <table>
         <thead>
             <tr>
-                <th>Name</th>
-                <th>Email</th>
+                <th border: 1px solid red; border-collapse: collapse; >Name</th>
+                <th border: 1px solid red; border-collapse: collapse;  >Email</th>
                 <th>Date of Birth</th>
                 <th>Gender</th>
                 <th>Account number</th>
@@ -16,8 +16,8 @@
         <tbody>
             {% for user in users %}
                 <tr>
-                    <td>{{ user.name }}</td>
-                    <td>{{ user.email }}</td>
+                    <td border: 1px solid red; border-collapse: collapse; >{{ user.name }}</td>
+                    <td border: 1px solid red; border-collapse: collapse; >{{ user.email }}</td>
                     <td>{{ user.date_of_birth }}</td>
                     <td>{{ user.gender }}</td>
                     <td>{{ user.account_number }}</td>

@@ -33,7 +33,8 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
     id_number = models.CharField(max_length=10, unique=True, editable=False)
     account_number = models.CharField(max_length=10, unique=True, default='')
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=1000)
-
+    transaction_pin = models.PositiveIntegerField(blank=True, null=True)
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'date_of_birth', 'gender']
 
@@ -53,16 +54,11 @@ class MyUser(AbstractBaseUser, PermissionsMixin):
             if not MyUser.objects.filter(account_number=account_number).exists():
                 return account_number
 
-    # def deposit(self, amount):
-    #     if amount <= 0:
-    #         raise ValueError("Amount must be greater than zero")
-    #     self.balance += Decimal(str(amount))
-    #     self.save()
-
     def withdraw(self, amount):
+        amount = Decimal(str(amount))  # Convert the amount to a Decimal object
         if amount >= self.balance:
-            raise ValueError("Insuficient funds")
-        self.balance -= Decimal(str(amount))
+            raise ValueError("Insufficient funds")
+        self.balance -= amount
         self.save()
 
     def airtime(self, amount):
@@ -104,12 +100,13 @@ class Transaction(models.Model):
         ('Airtime', 'Airtime'),
         ('Sent', 'Sent'),
         ('Received', 'Received'),
-        ('Utility', 'Utility'),
-        ('Loan', 'Loan')
+        ('Electricity', 'Electricity'),
+        ('Bank-Loan', 'Bank-Loan'),
+        ('Repayment-Loan', 'Repayment-Loan'),
     ]
 
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPE_CHOICES)
+    transaction_type = models.CharField(max_length=15, choices=TRANSACTION_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     date = models.DateTimeField(auto_now_add=True)
 

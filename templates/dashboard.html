@@ -6,6 +6,7 @@
   <title>DeltaPay</title>
   <link rel="stylesheet" href="{% static 'https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css' %}">
 <link rel="stylesheet" href="{% static '/css/Dstyle.css' %}">
+<link rel="icon" type="image/x-icon" href="static\images\dp logo only.png">
 <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>            
 
 </head>
@@ -50,7 +51,7 @@
 					</button>
 				</form>
 				{% if user.is_superuser %}
-				<form action="admindash">
+				<form action="adminpanel">
 					<button class="icon-button large" >
 						<i class="fa fa-briefcase" aria-hidden="true"></i>
 					</button>

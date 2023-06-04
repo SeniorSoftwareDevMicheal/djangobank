@@ -1,0 +1,10 @@
+<form method="post">
+    {% csrf_token %}
+    <label for="transaction_pin">Transaction PIN:</label>
+    <input type="password" name="transaction_pin" maxlength="4" required>
+    <br>
+    <label for="confirm_transaction_pin">Confirm Transaction PIN:</label>
+    <input type="password" name="confirm_transaction_pin" maxlength="4" required>
+    <br>
+    <input type="submit" value="Set Transaction PIN">
+  </form>

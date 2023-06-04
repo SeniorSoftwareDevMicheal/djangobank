@@ -1,7 +1,11 @@
 from django.urls import path
 from . import views
 
+from django.views.static import serve
+from django.conf.urls import url
+
 urlpatterns = [
+
     path('',views.index, name='index' ),
     path('home',views.home, name='home' ),
     path('signup',views.signup, name='signup' ),
@@ -15,7 +19,7 @@ urlpatterns = [
     path('history',views.history, name='history' ),
     path('electricity',views.electricity, name='electricity' ),
     path('admindashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('admindash',views.admindash, name='admindash' ),
+    path('adminpanel',views.adminpanel, name='adminpanel' ),
     path('suspend_user/<int:user_id>/', views.suspend_user, name='suspend_user'),
     path('unsuspend_user/<int:user_id>/', views.unsuspend_user, name='unsuspend_user'),
     path('loan/', views.apply_loan, name='loan'),
@@ -23,6 +27,9 @@ urlpatterns = [
     path('approve-loan/<int:loan_id>/', views.approve_loan, name='approve_loan'),
     path('reject-loan/<int:loan_id>/', views.reject_loan, name='reject_loan'),
     path('loans/pending-repayment/', views.pending_repayment, name='pending_repayment'),
-     path('repay-loan/<int:loan_id>/', views.repay_loan, name='repay_loan'),
+    path('repay-loan/<int:loan_id>/', views.repay_loan, name='repay_loan'),
+
+    url(r'^media/(?P<path>.*)$', serve,{'document_root':       settings.MEDIA_ROOT}), 
+    url(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}), 
 ]
 
