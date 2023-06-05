@@ -1,8 +1,6 @@
 from django.urls import path
 from . import views
 
-from django.views.static import serve
-from django.conf.urls import url
 
 urlpatterns = [
 
@@ -28,8 +26,5 @@ urlpatterns = [
     path('reject-loan/<int:loan_id>/', views.reject_loan, name='reject_loan'),
     path('loans/pending-repayment/', views.pending_repayment, name='pending_repayment'),
     path('repay-loan/<int:loan_id>/', views.repay_loan, name='repay_loan'),
-
-    url(r'^media/(?P<path>.*)$', serve,{'document_root':       settings.MEDIA_ROOT}), 
-    url(r'^static/(?P<path>.*)$', serve,{'document_root': settings.STATIC_ROOT}), 
 ]
 
