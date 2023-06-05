@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-a8y03y$@k$+h_jr_24-$(sk=u^abbuiwy%w&c4d4k(y=@k@k^z
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['127.0.0.1','sampledomain.com']
+ALLOWED_HOSTS = ['127.0.0.1','deltapay.herokuapp.com']
 
 
 # Application definition
