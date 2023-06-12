@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Set Transaction Pin</h2>
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="transaction_pin">Transaction PIN (4 digits)</label>
+      <input type="password" name="transaction_pin" id="transaction_pin" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label for="confirm_pin">Confirm Transaction PIN</label>
+      <input type="password" name="confirm_pin" id="confirm_pin" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Set PIN</button>
+  </form>
+
+  {% if messages %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+<form method="POST">
+  {% csrf_token %}
+  <div class="form-group">
+    <label for="transaction_pin">New Transaction PIN (4 digits)</label>
+    <input type="password" name="transaction_pin" id="transaction_pin" class="form-control" required>
+  </div>
+  <div class="form-group">
+    <label for="confirm_pin">Confirm New Transaction PIN</label>
+    <input type="password" name="confirm_pin" id="confirm_pin" class="form-control" required>
+  </div>
+  <button type="submit" class="btn btn-primary">Reset PIN</button>
+</form>
+{% endblock %}

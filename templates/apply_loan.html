@@ -1,15 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
 <!-- loan_request_form -->
-<h2>Loan Request</h2>
-<form method="POST" action="{% url 'loan' %}">
-  {% csrf_token %}
-  <label for="amount">Loan Amount:</label>
-  <input type="number" id="amount" name="amount" step="0.01" required>
-  <button type="submit">Submit</button>
-</form>
+<div class="app-body-main-content">
+  <section class="service-section">
+    <h2>Loan Request</h2>
+    <div class="service-section-header">
+      <div class="search-field">
+        {% if user.is_authenticated %}
+        <i>	&#8358;</i>
+        <i class="search-field" style="padding-left: 15px;"> {{user.balance}} </i>
+        {% else %}
+        <i>You are broke get your bread up</h1>
+        {% endif %}
 
+      </div>
+      <div class="search-field">
+        {% if user.is_authenticated %}
+        <i class="search-field" style="padding-left: 15px;"> {{user.account_number}} </i>
+        {% else %}
+        <i>No account number</h1>
+        {% endif %}
+      </div>
+      <div class="dropdown-field">
+        <select>
+          <option>Savings</option>
+        </select>
+        <i class="ph-caret-down"></i>
+      </div>
+  </section>
+<section class="withdraw-field">
 
+  <form method="POST" action="{% url 'loan' %}">
+    {% csrf_token %}
+    <label for="amount">Loan Amount:</label>
+    <label>Note fixed 14% rate </label>
+    <input type="number" name="amount" id="amount" step="10.0" required placeholder="Enter Amount (&#8358;)">
+    <button class="flat-button" style="margin-top: 15px;" type="submit">
+      Submit
+        </button>
+  </form>
+
+</section>
+<br>
+<button>
 <a href="{% url 'pending_repayment' %}">
   <i class="ph-clipboard-text"></i>
   <span>pending loans</span>
 </a>
-
+</button>
+{% endblock %}

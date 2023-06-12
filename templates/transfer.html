@@ -1,182 +1,72 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en" >
-<head>
-  <meta charset="UTF-8">
-  <title>DeltaPay</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
-  <link rel="stylesheet" href="{% static '/css/Dstyle.css' %}">
 
-</head>
-<body>
-<!-- partial:index.partial.html -->
-<div class="app">
-	<header class="app-header">
-		<div class="app-header-logo">
-			<div class="logo">
-				<span class="logo-icon">
-					<img src="static\images\dp logo only.png" />
-				</span>
-				<h1 class="logo-title">
-					<span>DeltaPay</span>
-					<span>Bank</span>
-				</h1>
-			</div>
-		</div>
-		<div class="app-header-navigation">
-			<div class="tabs">
-				<a href="#">
-					Welcome to DeltaPay
-				</a>
-			</div>
-		</div>
-		<div class="app-header-actions">
-			<button class="user-profile">
+{% block content %}
+<div class="app-body-main-content">
+	<section class="service-section">
+		<h2>Transfer</h2>
+		<div class="service-section-header">
+			<div class="search-field">
 				{% if user.is_authenticated %}
-				<span>{{user.name}}</span>
+				<i>&#8358;</i>
+				<i class="search-field" style="padding-left: 15px;">{{ user.balance }}</i>
 				{% else %}
-				<h1>No username</h1>
+				<i>You are broke get your bread up</i>
 				{% endif %}
-				
-				<span>
-					<img src="{% static 'https://assets.codepen.io/285131/almeria-avatar.jpeg' %}" />
-				</span>
-			</button>
-			<div class="app-header-actions-buttons">
-				<button class="icon-button large">
-					<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css'>
-					<a href="{% url 'home' %}">
-					<i class='fa fa-sign-out' style='color: white'></i>
-					</a>
-				</button>
+			</div>
+			<div class="search-field">
+				{% if user.is_authenticated %}
+				<i class="search-field" style="padding-left: 15px;">{{ user.account_number }}</i>
+				{% else %}
+				<i>No account number</i>
+				{% endif %}
+			</div>
+			<div class="dropdown-field">
+				<select>
+					<option>Savings</option>
+				</select>
+				<i class="ph-caret-down"></i>
 			</div>
 		</div>
-		<div class="app-header-mobile">
-			<button class="icon-button large">
-				<i class="ph-list"></i>
-			</button>
+	</section>
+	<section class="withdraw-field">
+		<form action="{% url 'transfer' %}" method="POST">
+			{% csrf_token %}
+			<input type="text" name="accountnumber" placeholder="Enter 10-digit account number" required>
+			<input type="text" name="bank" placeholder="Enter bank name" required>
+			<input type="number" name="amount" placeholder="Enter Amount To Transfer (&#8358;)" required>
+			<br>
+			<br>
+			<br>
+			<div style= "text-align: center;">
+				<label for="password">ENTER 4-DIGIT PIN</label><br>
+				<input  type="text" class ="password" id="password" name="password" autocomplete="off" placeholder="0000" required >
+				<button class="flat-button" style="margin-top: 15px;">Transfer</button>
+			</div>
+		</form>
+	</section>
+	<section class="transfer-section">
+		<div class="transfer-section-header">
+			<h2>Alerts Below</h2>
+			<div class="filter-options">
+			</div>
 		</div>
-
-
-	</header>
-	<div class="app-body">
-		<div class="app-body-navigation">
-			<nav class="navigation">
-				<a href="{% url 'dashboard' %}">
-					<i class="ph-browsers"></i>
-					<span>Dashboard</span>
-				</a>
-				<a href="{% url 'deposit' %}">
-					<i class="ph-file-text"></i>
-					<span>Deposit</span>
-				</a>
-				<a href="{% url 'withdraw' %}">
-					<i class="ph-check-square"></i>
-					<span>Withdraw</span>
-				</a>
-				<a href="{% url 'transfer' %}">
-					<i class="ph-swap"></i>
-					<span>Transfers</span>
-				</a>
-				<a href="{% url 'history' %}">
-					<i class="ph-clipboard-text"></i>
-					<span>History</span>
-				</a>
-				<a href="{% url 'home' %}">
-					<i class="ph-globe"></i>
-					<span>Logout</span>
-				</a>
-			</nav>
-			<footer class="footer">
-				<h1>Delta<small>©</small></h1>
-				<div>
-					DeltaPay ©<br />
-					All Rights Reserved 2023
-				</div>
-			</footer>
+		{% if messages %}
+		{% for message in messages %}
+		<div class="transfers">
+			<div class="transfer">
+				<dl class="transfer-details">
+					<div style="width: fit-content;">
+						<dt>{{ message }}</dt>
+					</div>
+					<div>
+						<dt>{{ message.tags }}</dt>
+					</div>
+				</dl>
+			</div>
 		</div>
-		<div class="app-body-main-content">
-			<section class="service-section">
-				<h2>Transfer</h2>
-				<div class="service-section-header">
-					<div class="search-field">
-						{% if user.is_authenticated %}
-						<i>	&#8358;</i>
-						<i class="search-field" style="padding-left: 15px;"> {{user.balance}} </i>
-						{% else %}
-						<i>You are broke get your bread up</h1>
-						{% endif %}
-
-					</div>
-					<div class="search-field">
-						{% if user.is_authenticated %}
-						<i class="search-field" style="padding-left: 15px;"> {{user.account_number}} </i>
-						{% else %}
-						<i>No account number</h1>
-						{% endif %}
-					</div>
-					<div class="dropdown-field">
-						<select>
-							<option>Savings</option>
-						</select>
-						<i class="ph-caret-down"></i>
-					</div>
-			</section>
-			<section class="withdraw-field">
-				<form action="transfer" method="POST">
-					{% csrf_token %}
-                    <i class="search-field"></i>Recipent info:</i>
-                    <input type="text" name="accountnumber" placeholder="Enter 10-digit account  number">
-                    <input type="text" name="bank" placeholder="Enter bank name">
-				    <input type="number" name="amount" placeholder="Enter Amount To Transfer (&#8358;)">
-				    <button class="flat-button" style="margin-top: 15px;">
-					Transfer
-				    </button>
-			</form>
-			</section>
-			<section class="transfer-section">
-				<div class="transfer-section-header">
-					<h2>Alerts Below</h2>
-					<div class="filter-options">
-					</div>
-				</div>
-				{% if messages %}
-				{% for message in messages %}
-				<div class="transfers">
-					<div class="transfer">
-						<dl class="transfer-details">
-							<div style="width: fit-content;">
-								<dt> {{ message }} </dt>
-							</div>
-							<div>
-								<dt>{{ message.tags }}</dt>
-							</div>
-						</dl>
-					</div>
-				{% endfor %}
-				{% endif %} 
-			</section>
-		</div>
-	</div>
+		{% endfor %}
+		{% endif %}
+	</section>
 </div>
-<!-- partial -->
-  <script src='https://unpkg.com/phosphor-icons'></script><script  src="./script.js"></script>
-
-  {% comment %} <div id="content">
-
-	{% include 'messages.html' %}
-
-	{% block content %}  {% endblock content %}
-	
-  </div>   {% endcomment %}
-  <script>
-	setTimeout(function(){
-	  if ($('#msg').length > 0) {
-		$('#msg').remove();
-	  }
-	}, 2000)
-	</script> 
-  
-
-</body>
-</html>
+{% endblock %}

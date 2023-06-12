@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+#imports
+from django.shortcuts import render, redirect, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
@@ -7,6 +8,13 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import authenticate, login as auth_login
 from django.urls import reverse
 from django.utils import timezone
+from datetime import datetime, timedelta
+from django.contrib.auth.decorators import login_required
+from decimal import Decimal
+from bankapp.models import Transaction, Contact
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponseForbidden
+from django import forms
 
 # Create your views here.
 
@@ -64,8 +72,6 @@ def signup(request):
     else:
         return render(request, 'signup.html')
 
-from django.http import HttpResponseForbidden
-
 def dashboard(request):
     user = request.user
 
@@ -75,12 +81,34 @@ def dashboard(request):
         context = {'user': user, 'account_number': user.account_number, 'balance': user.balance}
         return render(request, 'dashboard.html', context)
 
+def base(request):
+    user = request.user
 
+    if user.is_suspended:
+        return render(request, 'suspended_dashboard.html', {'balance': user.balance})
+    else:
+        context = {'user': user, 'account_number': user.account_number, 'balance': user.balance}
+        return render(request, 'base.html', context)
+
+def more_services(request):
+    user = request.user
+
+    if user.is_suspended:
+        return render(request, 'suspended_dashboard.html', {'balance': user.balance})
+    else:
+        context = {'user': user, 'account_number': user.account_number, 'balance': user.balance}
+        return render(request, 'more_services.html', context)
+    
+def userprofile(request):
+    user = request.user
+
+    if user.is_suspended:
+        return render(request, 'suspended_dashboard.html', {'balance': user.balance})
+    else:
+        context = {'user': user, 'account_number': user.account_number, 'balance': user.balance}
+        return render(request, 'userprofile.html', context)
+    
 #deposit function
-from decimal import Decimal
-from bankapp.models import Transaction
-from django.contrib.admin.views.decorators import staff_member_required
-
 @staff_member_required
 def deposit(request):
     if request.method == 'POST':
@@ -117,7 +145,6 @@ def withdraw(request):
     return render(request, 'withdraw.html')
 
 #trasfer function
-from django.contrib.auth.decorators import login_required
 from django.db.models import F
 #The F() function is a very useful tool in Django for working with model fields.
 #---It allows you to reference the value of a database column or field and use it in a query or a filter expression.
@@ -125,6 +152,14 @@ from django.db.models import F
 @login_required
 def transfer(request):
     if request.method == 'POST':
+        # Get the entered transaction PIN from the form
+        transaction_pin = request.POST.get('password')
+
+        # Verify the transaction PIN against the user's saved PIN
+        if transaction_pin != request.user.transaction_pin:
+            messages.error(request, 'Invalid transaction PIN.If you have not set your pin check user-profile')
+            return redirect('transfer')
+
         sender = request.user
         recipient_account_number = request.POST.get('accountnumber')
         recipient_bank_name = request.POST.get('bank')
@@ -164,10 +199,11 @@ def transfer(request):
         sender_transaction.save()
         recipient_transaction = Transaction.objects.create(user=recipient, transaction_type='Received', amount=amount)
         recipient_transaction.save()
-        messages.success(request, f'Transfer to {recipient} successful ')
+        messages.success(request, f'Transfer to {recipient} successful')
         return redirect('transfer')
 
     return render(request, 'transfer.html')
+
 
 def airtime(request):
     if request.method == 'POST':
@@ -227,8 +263,6 @@ def admindash(request):
     context = {'user': request.user, 'account_number': request.user.account_number, 'balance': request.user.balance,}
     return render(request, 'admin_dash.html', context,)
 
-from django.shortcuts import get_object_or_404, redirect
-
 def suspend_user(request, user_id):
     user = get_object_or_404(MyUser, id=user_id)
     user.is_suspended = True
@@ -242,8 +276,6 @@ def unsuspend_user(request, user_id):
     user.save()
     messages.success(request, 'User account unsuspended successfully.')
     return redirect('admin_dashboard')
-
-from .models import Loan
 
 @login_required
 def apply_loan(request):
@@ -263,8 +295,6 @@ def apply_loan(request):
 def loan_requests(request):
     loan_requests = Loan.objects.filter(status='pending')
     return render(request, 'loan_requests.html', {'loan_requests': loan_requests})
-
-from datetime import datetime, timedelta
 
 @login_required
 def approve_loan(request, loan_id):
@@ -297,8 +327,6 @@ def reject_loan(request, loan_id):
     messages.success(request, 'Loan rejected successfully.')
     return redirect('loan_requests')
 
-from django.shortcuts import render ,redirect
-
 def pending_repayment(request):
     user = request.user
     pending_loans = Loan.objects.filter(user=user, status='approved awaiting repayment')
@@ -310,10 +338,16 @@ def repay_loan(request, loan_id):
     # Check if the loan is in the pending repayment status
     if loan.status == 'approved awaiting repayment':
         user = loan.user
-        amount = loan.amount
+        loan_amount = loan.amount
+        interest_rate = loan.interest_rate/100  # 14% interest rate or could be dynamic <3
 
-        # Deduct the loan amount from the user's balance
-        user.balance -= amount
+        # Calculate the interest amount
+        interest_amount = loan_amount * interest_rate
+
+        # Deduct the loan amount and interest from the user's balance
+        total_amount = loan_amount + interest_amount
+        user.balance -= total_amount
+        transaction = Transaction.objects.create(user=user, transaction_type='Loan', amount=total_amount)
         user.save()
 
         # Update the loan status to indicate repayment
@@ -321,9 +355,83 @@ def repay_loan(request, loan_id):
         loan.save()
 
         # Redirect the user to a success page or perform any other necessary actions
-        messages.success(request, 'repayment success')
+        messages.success(request, 'Repayment successful. Loan and interest amount deducted.')
         return redirect('dashboard')
 
     # If the loan is not in the correct status, handle the error or redirect to an appropriate page
-    messages.success(request, 'repayment failure')
+    messages.error(request, 'Repayment failed. Loan is not in the correct status.')
     return redirect('dashboard')
+
+@login_required
+def set_transaction_pin(request):
+    if request.method == 'POST':
+        # Get the entered transaction PIN from the form
+        transaction_pin = request.POST.get('transaction_pin')
+        confirm_pin = request.POST.get('confirm_pin')
+
+        # Validate the transaction PIN
+        if len(transaction_pin) != 4 or not transaction_pin.isdigit():
+            messages.error(request, 'Invalid transaction PIN.')
+            return redirect('set_transaction_pin')
+
+        # Confirm the transaction PIN
+        if transaction_pin != confirm_pin:
+            messages.error(request, 'Transaction PIN does not match the confirmation')
+            return redirect('set_transaction_pin')
+
+        # Save the transaction PIN for the logged-in user
+        request.user.transaction_pin = transaction_pin
+        request.user.save()
+
+        messages.success(request, 'Transaction PIN set successfully')
+        return redirect('transfer')
+
+    return render(request, 'set_transaction_pin.html')
+
+
+@login_required
+def reset_transaction_pin(request):
+    if request.method == 'POST':
+        # Get the entered transaction PIN from the form
+        transaction_pin = request.POST.get('transaction_pin')
+        confirm_pin = request.POST.get('confirm_pin')
+
+        # Validate the transaction PIN
+        if len(transaction_pin) != 4 or not transaction_pin.isdigit():
+            messages.error(request, 'Invalid transaction PIN')
+            return redirect('set_transaction_pin')
+
+        # Confirm the transaction PIN
+        if transaction_pin != confirm_pin:
+            messages.error(request, 'Transaction PIN does not match the confirmation')
+            return redirect('set_transaction_pin')
+
+        # Reset the transaction PIN for the logged-in user
+        request.user.transaction_pin = transaction_pin
+        request.user.save()
+
+        messages.success(request, 'Transaction PIN reset successfully')
+        return redirect('transfer')
+
+    return render(request, 'set_transaction_pin.html')
+
+def contact(request):
+    if request.method=="POST":
+        contact=Contact()
+        name=request.POST.get('Name')
+        email=request.POST.get('Email')
+        message=request.POST.get('Message')
+        contact.Name=name
+        contact.Email=email
+        contact.Message=message
+        contact.save()
+        return render(request, 'success.html')
+    return render(request, 'contactus.html')
+
+def success(request):
+    return render(request, 'success.html')
+
+class ContactForm(forms.Form):
+    Name = forms.CharField(max_length=100)
+    Email = forms.EmailField()
+    Message = forms.CharField(widget=forms.Textarea)

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<!DOCTYPE html>
+<head>
+  <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css'>
+  <link rel="stylesheet" href="{% static '/css/userprofile.css' %}">
+</head>
+<body>
+<!-- partial:index.partial.html -->
+{% if user.is_authenticated %}
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6 col-xs-offset-0 col-sm-offset-0 col-md-offset-3 col-lg-offset-3 toppad">
+      <div class="panel panel-primary">
+        <div class="panel-heading">
+          <h3 class="panel-title">{{user.name}}</h3>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-3 col-lg-3 " align="center"> <img alt="User Pic" src="https://drive.google.com/file/d/1kXgc759jYb1vQC58dFeqt8zPCVRNkpmz/view?usp=sharing" class="img-circle img-responsive"> </div>
+            <div class=" col-md-9 col-lg-9 ">
+              <table class="table table-user-information">
+                <tbody>
+                    <tr>
+                        <tr>
+                          <td>Email</td>
+                          <td>{{ user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td>Account Number</td>
+                            <td>{{ user.account_number }} </td>
+                        </tr>
+                        <tr>
+                          <td>Gender</td>
+                          <td>{{ user.gender }}</td>
+                        </tr>
+                        <tr>
+                            <td>Date of Birth</td>
+                            <td>{{ user.date_of_birth }}</td>
+                          </tr>
+                        <tr>
+                            <td>Balance:</td>
+                            <td><i>	&#8358; </i>{{ user.balance }}</td>
+                        </tr>
+                      </tr>
+                  <tr>
+                    <td>Set Transaction Pin</td>
+                    <td><a href="{% url 'set_transaction_pin' %}"> Click HERE </a></td>
+                  </tr>
+                  <tr>
+                    <td>Reset Transaction Pin</td>
+                    <td><a href="{% url 'reset_transaction_pin' %}"> Click HERE </a> </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<h1>No username, sign-in</h1>
+{% endif %}
+<!-- partial -->
+  
+</body>
+
+{% endblock %}

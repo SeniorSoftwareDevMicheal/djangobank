@@ -23,6 +23,14 @@ urlpatterns = [
     path('approve-loan/<int:loan_id>/', views.approve_loan, name='approve_loan'),
     path('reject-loan/<int:loan_id>/', views.reject_loan, name='reject_loan'),
     path('loans/pending-repayment/', views.pending_repayment, name='pending_repayment'),
-     path('repay-loan/<int:loan_id>/', views.repay_loan, name='repay_loan'),
+    path('repay-loan/<int:loan_id>/', views.repay_loan, name='repay_loan'),
+    path('base', views.base, name='base'),
+    path('more_services', views.more_services, name='more_services'),
+    path('userprofile', views.userprofile, name='userprofile'),
+    # path('transaction_pin/', views.transaction_pin, name='transaction_pin'),
+    path('set-transaction-pin/', views.set_transaction_pin, name='set_transaction_pin'),
+    path('reset-transaction-pin/', views.reset_transaction_pin, name='reset_transaction_pin'),
+    path('contactus',views.contact, name='contactus' ),
+    path('success',views.success, name='success' ),
 ]
 

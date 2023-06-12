@@ -3,7 +3,7 @@
 {% block content %}
 		<div class="app-body-main-content">
 			<section class="service-section">
-				<h2>Quick Services</h2>
+				<h2>More Services</h2>
 				<div class="service-section-header">
 					<div class="search-field">
 						{% if user.is_authenticated %}
@@ -37,7 +37,7 @@
 					</button>
 				</div> {% endcomment %}
 				<div class="tiles">
-					<article class="tile" style="color: white;">
+					<article class="tile" style="background-color: #FFC300; color: white;">
 						<div class="tile-header">
 							<i class="ph-file-light"></i>
 							<h3>
@@ -52,7 +52,7 @@
 							</span>
 						</a>
 					</article>
-					<article class="tile" style="color: white;">
+					<article class="tile"style="background-color: #088F8F; color: white;">
 						<div class="tile-header">
 							<i class="ph-lightning-light"></i>
 							<h3>
@@ -82,9 +82,54 @@
 							</span>
 						</a>
 					</article>
+                    <article class="tile mobile-only" style="background-color: #33FFBD; color: white;">
+						<div class="tile-header">
+							<i class="ph-swap"></i>
+							<h3>
+								<span>Loan</span>
+								<span>Any Bank of your choice</span>
+							</h3>
+						</div>
+						<a href="{% url 'loan' %}">
+							<span>Go to service</span>
+							<span class="icon-button">
+								<i class="ph-caret-right-bold"></i>
+							</span>
+						</a>
+					</article>
+                    <article class="tile mobile-only" style="background-color: #C70039; color: white;">
+						<div class="tile-header">
+							<i class="ph-swap"></i>
+							<h3>
+								<span>History</span>
+								<span>Any Bank of your choice</span>
+							</h3>
+						</div>
+						<a href="{% url 'transfer' %}">
+							<span>Go to service</span>
+							<span class="icon-button">
+								<i class="ph-caret-right-bold"></i>
+							</span>
+						</a>
+					</article>
+					<article class="tile mobile-only" style="background-color: #808080; color: white; ">
+						<div class="tile-header">
+							<i class="ph-swap"></i>
+							<h3>
+								<span>Coming soon</span>
+								<span>Many More services to come</span>
+							</h3>
+						</div>
+						<a href=" ">
+							<span>Go to service</span>
+							<span class="icon-button">
+								<i class="ph-caret-right-bold"></i>
+							</span>
+						</a>
+					</article>
 				</div>
 				<div class="service-section-footer">
-					<p>Services are paid according to the current state of the currency and tariff.</p>
+					<p>ignore</p>
 				</div>
 			</section>
 			<section class="transfer-section">

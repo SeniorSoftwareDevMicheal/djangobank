@@ -95,9 +95,10 @@ a {
   display: flex;
   align-items: center;
 }
+
 @media (max-width: 1200px) {
   .app-header-actions {
-    display: none;
+    display: flex;
   }
 }
 
@@ -116,7 +117,7 @@ a {
 }
 @media (max-width: 1200px) {
   .app-header-mobile {
-    display: flex;
+    display: none;
   }
 }
 
@@ -425,7 +426,7 @@ a {
 }
 @media (max-width: 1000px) {
   .service-section-header {
-    display: none;
+    display: flex;
   }
 }
 
@@ -836,4 +837,21 @@ button:focus {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
+}
+
+@import url(//db.onlinewebfonts.com/c/92e85b7e0bff6d2c280071dffc62b98b?family=text-security-disc);
+
+@font-face {
+  font-family: 'text-security-disc';
+  src: url('fonts/text-security-disc.eot');
+  src: url('fonts/text-security-disc.eot?#iefix') format('embedded-opentype'),
+      url('fonts/text-security-disc.woff') format('woff'),
+      url('fonts/text-security-disc.ttf') format('truetype'),
+      url('images/text-security-disc.svg#text-security') format('svg');
+}
+
+input.password {
+  font-family: 'text-security-disc';
+  width:15%;
+  margin-bottom:5px
 }
