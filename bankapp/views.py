@@ -108,25 +108,33 @@ def userprofile(request):
         context = {'user': user, 'account_number': user.account_number, 'balance': user.balance}
         return render(request, 'userprofile.html', context)
     
-#deposit function
 @staff_member_required
 def deposit(request):
     if request.method == 'POST':
         amount = float(request.POST.get('amount'))
         recipient_account_number = request.POST.get('accountnumber')
+        
+        try:
+            recipient = MyUser.objects.get(account_number=recipient_account_number)
+        except MyUser.DoesNotExist:
+            messages.error(request, 'Recipient account not found')
+            return render(request, 'deposit.html')
+        
         if amount <= 0:
             messages.error(request, 'Amount must be greater than zero')
         else:
             user = request.user
-            recipient = MyUser.objects.get(account_number=recipient_account_number)
             recipient.balance = F('balance') + amount
             recipient.save()
-            # Create a new Transaction object to record the deposit
+            
             transaction = Transaction.objects.create(user=user, transaction_type='Deposit', amount=amount)
             transaction.save()
-            messages.success(request, f'Successfully added {amount:.2f} to your account balance. deposit authorized by {user}')
+            
+            messages.success(request, f'Successfully added {amount:.2f} to account balance of {recipient_account_number}. Deposit authorized by {user}')
             return redirect('dashboard')
+    
     return render(request, 'deposit.html')
+
 
 @staff_member_required
 def withdraw(request):
